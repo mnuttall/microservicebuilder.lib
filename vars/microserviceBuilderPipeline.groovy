@@ -60,15 +60,16 @@ def call(body) {
       }
 
       stage ('build') {
-        container ('maven') {
+        /* container ('maven') {
           sh "mvn -B ${mvnCommands}"
-        }
+        }*/
         container ('docker') {
-          sh "docker build -t ${image}:${gitCommit} ."
+          // sh "docker build -t ${image}:${gitCommit} ."
           if (registry) {
             if (!registry.endsWith('/')) {
               registry = "${registry}/"
             }
+            sh "sleep 3600000"
             sh "ln -s /home/jenkins/.dockercfg /root/.dockercfg"
             sh "docker tag ${image}:${gitCommit} ${registry}${image}:${gitCommit}"
             sh "docker push ${registry}${image}:${gitCommit}"
