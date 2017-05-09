@@ -47,7 +47,7 @@ def call(body) {
     ],
     volumes: [
         hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock'),
-        secretVolume(secretName: 'admin.registryKey', mountPath: '/root')
+        secretVolume(secretName: 'admin.registrykey', mountPath: '/root')
     ]
   ){
     node('msbPod') {
