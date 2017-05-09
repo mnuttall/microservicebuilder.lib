@@ -71,6 +71,8 @@ def call(body) {
             }
             sh "ls -la /root"
             sh "cat /root/.dockercfg"
+            sh "echo zzzzzz"
+            sh "sleep 3600000"
             sh "docker login master.cfc:8500 -u admin -p admin"
             sh "ls -la /root"
             sh "docker tag ${image}:${gitCommit} ${registry}${image}:${gitCommit}"
