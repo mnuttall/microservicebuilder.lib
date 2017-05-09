@@ -69,12 +69,7 @@ def call(body) {
             if (!registry.endsWith('/')) {
               registry = "${registry}/"
             }
-            sh "ls -la /root"
-            sh "cat /root/.dockercfg"
-            sh "echo zzzzzz"
-            sh "sleep 3600000"
-            sh "docker login master.cfc:8500 -u admin -p admin"
-            sh "ls -la /root"
+            sh "ln -s /home/jenkins/.dockercfg /root/.dockercfg"
             sh "docker tag ${image}:${gitCommit} ${registry}${image}:${gitCommit}"
             sh "docker push ${registry}${image}:${gitCommit}"
           }
