@@ -71,7 +71,7 @@ def call(body) {
             }
             sh "ls -la /root"
             sh "cat /root/.dockercfg"
-            sh "docker login -u admin -p admin"
+            sh "docker login master.cfc:8500 -u admin -p admin"
             sh "ls /root/.docker"
             sh "cat /root/.docker/config.json"
             sh "cat /root/.dockercfg"
