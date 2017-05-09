@@ -46,7 +46,7 @@ def call(body) {
       containerTemplate(name: 'kubectl', image: kubectl, ttyEnabled: true, command: 'cat'),
     ],
     volumes: [
-        hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock')
+        hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock'),
         secretVolume(secretName: 'docker-secret', mountPath: '/root')
     ]
   ){
