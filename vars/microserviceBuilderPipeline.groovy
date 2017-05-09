@@ -81,7 +81,7 @@ def call(body) {
 
       stage ('deploy') {
         container ('kubectl') {
-          sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${image}:${gitCommit}|g\'"
+          sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
           sh 'kubectl apply -f manifests'
         }
       }
