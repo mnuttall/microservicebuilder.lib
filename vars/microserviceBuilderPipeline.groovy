@@ -71,8 +71,9 @@ def call(body) {
             }
             sh "ls -la /root"
             sh "cat /root/.dockercfg"
-            sh "docker login master.cfc:8500 -u admin -p admin"
+            sh "docker login master.cfc:8500"
             sh "ls -la /root"
+
             sh "cat /root/.dockercfg"
             sh "docker tag ${image}:${gitCommit} ${registry}${image}:${gitCommit}"
             sh "docker push ${registry}${image}:${gitCommit}"
