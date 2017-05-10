@@ -16,6 +16,11 @@
     kubectlImage = 'lachlanevenson/k8s-kubectl:v1.6.0'
     mvnCommands = 'clean package'
 
+  You can also specify:
+
+    build = 'true' - any value other than 'true' == false
+    deploy = 'true' - any value other than 'true' == false
+
 -------------------------*/
 
 def call(body) {
@@ -35,6 +40,13 @@ def call(body) {
   def mvnCommands = (config.mvnCommands == null) ? 'clean package' : config.mvnCommands
   def registry = System.getenv("REGISTRY").trim()
   def registrySecret = System.getenv("REGISTRY_SECRET").trim()
+
+  def buildSwitch = config.build ?: System.getenv ("BUILD")
+  def deploySwitch = config.deploy ?: system.getenv ("DEPLOY")
+  def build = buildSwitch.trim().toLowerCase() == 'true'
+  def deploy = deploySwitch.trim().toLowerCase() == 'true'
+  print "microserviceBuilderPipeline: build=${build} deploy=${deploy}"
+
 
   /* Only mount registry secret if it's present */
   def volumes = [ hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock') ]
@@ -64,27 +76,31 @@ def call(body) {
         echo "checked out git commit ${gitCommit}"
       }
 
-      stage ('build') {
-        container ('maven') {
-          sh "mvn -B ${mvnCommands}"
-        }
-        container ('docker') {
-          sh "docker build -t ${image}:${gitCommit} ."
-          if (registry) {
-            if (!registry.endsWith('/')) {
-              registry = "${registry}/"
+      if (build) {
+        stage ('build') {
+          container ('maven') {
+            sh "mvn -B ${mvnCommands}"
+          }
+          container ('docker') {
+            sh "docker build -t ${image}:${gitCommit} ."
+            if (registry) {
+              if (!registry.endsWith('/')) {
+                registry = "${registry}/"
+              }
+              sh "ln -s /root/.dockercfg /home/jenkins/.dockercfg"
+              sh "docker tag ${image}:${gitCommit} ${registry}${image}:${gitCommit}"
+              sh "docker push ${registry}${image}:${gitCommit}"
             }
-            sh "ln -s /root/.dockercfg /home/jenkins/.dockercfg"
-            sh "docker tag ${image}:${gitCommit} ${registry}${image}:${gitCommit}"
-            sh "docker push ${registry}${image}:${gitCommit}"
           }
         }
       }
 
-      stage ('deploy') {
-        container ('kubectl') {
-          sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
-          sh 'kubectl apply -f manifests'
+      if (deploy) {
+        stage ('deploy') {
+          container ('kubectl') {
+            sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
+            sh 'kubectl apply -f manifests'
+          }
         }
       }
     }
