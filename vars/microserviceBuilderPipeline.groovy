@@ -34,6 +34,14 @@ def call(body) {
   def kubectl = (config.kubectlImage == null) ? 'lachlanevenson/k8s-kubectl:v1.6.0' : config.kubectl
   def mvnCommands = (config.mvnCommands == null) ? 'clean package' : config.mvnCommands
   def registry = System.getenv("REGISTRY").trim()
+  def registrySecret = System.getenv("REGISTRY_SECRET").trim()
+
+  /* Only mount registry secret if it's present */
+  def volumes = [ hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock') ]
+  if (registrySecret) {
+    volumes += secretVolume(secretName: registrySecret, mountPath: '/root')
+  }
+  print "microserviceBuilderPipeline: volumes = ${volumes}"
 
   podTemplate(
     label: 'msbPod',
@@ -45,10 +53,7 @@ def call(body) {
         ]),
       containerTemplate(name: 'kubectl', image: kubectl, ttyEnabled: true, command: 'cat'),
     ],
-    volumes: [
-        hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock'),
-        secretVolume(secretName: 'admin.registrykey', mountPath: '/root')
-    ]
+    volumes: volumes
   ){
     node('msbPod') {
       def gitCommit
