@@ -40,13 +40,10 @@ def call(body) {
   def mvnCommands = (config.mvnCommands == null) ? 'clean package' : config.mvnCommands
   def registry = System.getenv("REGISTRY").trim()
   def registrySecret = System.getenv("REGISTRY_SECRET").trim()
+  def build = (config.build ?: System.getenv ("BUILD")).trim().toLowerCase() == 'true'
+  def deploy = (config.deploy ?: System.getenv ("DEPLOY")).trim().toLowerCase() == 'true'
 
-  def buildSwitch = config.build ?: System.getenv ("BUILD")
-  def deploySwitch = config.deploy ?: System.getenv ("DEPLOY")
-  def build = buildSwitch.trim().toLowerCase() == 'true'
-  def deploy = deploySwitch.trim().toLowerCase() == 'true'
-  print "microserviceBuilderPipeline: build=${build} deploy=${deploy}"
-
+  print "microserviceBuilderPipeline: registry=${registry} registrySecret=${registrySecret} build=${build} deploy=${deploy}"
 
   /* Only mount registry secret if it's present */
   def volumes = [ hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock') ]
