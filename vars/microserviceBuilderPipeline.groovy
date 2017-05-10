@@ -42,7 +42,7 @@ def call(body) {
   def registrySecret = System.getenv("REGISTRY_SECRET").trim()
 
   def buildSwitch = config.build ?: System.getenv ("BUILD")
-  def deploySwitch = config.deploy ?: system.getenv ("DEPLOY")
+  def deploySwitch = config.deploy ?: System.getenv ("DEPLOY")
   def build = buildSwitch.trim().toLowerCase() == 'true'
   def deploy = deploySwitch.trim().toLowerCase() == 'true'
   print "microserviceBuilderPipeline: build=${build} deploy=${deploy}"
