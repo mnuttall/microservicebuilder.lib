@@ -95,7 +95,7 @@ def call(body) {
       if (deploy) {
         stage ('deploy') {
           when {
-            branch 'testbranch'
+            expression { return true }
           }
 
         container ('kubectl') {
