@@ -42,6 +42,7 @@ def call(body) {
   def registry = System.getenv("REGISTRY").trim()
   def registrySecret = System.getenv("REGISTRY_SECRET").trim()
   def build = (config.build ?: System.getenv ("BUILD")).trim().toLowerCase() == 'true'
+  def deploy = (config.deploy ?: System.getenv ("DEPLOY")).trim().toLowerCase() == 'true'
   def defaultDeployBranch = System.getenv("DEPLOYBRANCH")
   defaultDeployBranch = (defaultDeployBranch == null || defaultDeployBranch.trim() == "") ? 'master' : defaultDeployBranch
   def deployBranch = (config.deployBranch == null) ? defaultDeployBranch : config.deployBranch
