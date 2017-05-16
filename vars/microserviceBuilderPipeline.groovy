@@ -20,6 +20,7 @@
 
     build = 'true' - any value other than 'true' == false
     deploy = 'true' - any value other than 'true' == false
+    deployBranch = 'master' - only builds from this branch are deployed
 
 -------------------------*/
 
@@ -42,6 +43,7 @@ def call(body) {
   def registrySecret = System.getenv("REGISTRY_SECRET").trim()
   def build = (config.build ?: System.getenv ("BUILD")).trim().toLowerCase() == 'true'
   def deploy = (config.deploy ?: System.getenv ("DEPLOY")).trim().toLowerCase() == 'true'
+  def deployBranch = (config.deployBranch == null) ? 'master' : config.deployBranch
 
   print "microserviceBuilderPipeline: registry=${registry} registrySecret=${registrySecret} build=${build} deploy=${deploy}"
 
@@ -92,8 +94,9 @@ def call(body) {
         }
       }
 
-      if (deploy) {
-        echo sh(script: 'env', returnStdout: true)
+      echo sh(script: 'env', returnStdout: true)
+
+      if (deploy && env.BRANCH_NAME == deployBranch) {
         stage ('deploy') {
           container ('kubectl') {
             sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
