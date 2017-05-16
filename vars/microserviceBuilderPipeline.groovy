@@ -93,6 +93,7 @@ def call(body) {
       }
 
       if (deploy) {
+        echo sh(script: 'env', returnStdout: true)
         stage ('deploy') {
           container ('kubectl') {
             sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
