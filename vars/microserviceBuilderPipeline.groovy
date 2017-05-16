@@ -95,7 +95,7 @@ def call(body) {
       if (deploy) {
         stage ('deploy') {
           when {
-            expression { env.BRANCH_NAME == 'master' }
+            branch 'master'
           }
 
           container ('kubectl') {
