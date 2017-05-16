@@ -43,7 +43,7 @@ def call(body) {
   def registrySecret = System.getenv("REGISTRY_SECRET").trim()
   def build = (config.build ?: System.getenv ("BUILD")).trim().toLowerCase() == 'true'
   def defaultDeployBranch = System.getenv("DEPLOYBRANCH")
-  defaultDeployBranch = (defaultdeployBranch == null || defaultDeployBranch.trim() == "") ? 'master' : defaultDeployBranch
+  defaultDeployBranch = (defaultDeployBranch == null || defaultDeployBranch.trim() == "") ? 'master' : defaultDeployBranch
   def deployBranch = (config.deployBranch == null) ? defaultDeployBranch : config.deployBranch
 
   print "microserviceBuilderPipeline: registry=${registry} registrySecret=${registrySecret} build=${build} deploy=${deploy}"
