@@ -94,6 +94,10 @@ def call(body) {
 
       if (deploy) {
         stage ('deploy') {
+          when {
+            expression { env.BRANCH_NAME == 'master' }
+          }
+
           container ('kubectl') {
             sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
             sh 'kubectl apply -f manifests'
