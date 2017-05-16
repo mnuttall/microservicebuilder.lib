@@ -94,11 +94,7 @@ def call(body) {
 
       if (deploy) {
         stage ('deploy') {
-          when {
-            expression { return true }
-          }
-
-        container ('kubectl') {
+          container ('kubectl') {
             sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
             sh 'kubectl apply -f manifests'
           }
