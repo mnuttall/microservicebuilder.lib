@@ -94,8 +94,6 @@ def call(body) {
         }
       }
 
-      echo sh(script: 'env', returnStdout: true)
-
       if (deploy && env.BRANCH_NAME == deployBranch) {
         stage ('deploy') {
           container ('kubectl') {
