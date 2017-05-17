@@ -35,17 +35,15 @@ def call(body) {
   print "microserviceBuilderPipeline: config = ${config}"
 
   def image = config.image
-  def maven = (config.mavenImage == null) ? 'maven:3.5.0-jdk-8' : config.maven
-  def docker = (config.dockerImage == null) ? 'docker' : config.docker
-  def kubectl = (config.kubectlImage == null) ? 'lachlanevenson/k8s-kubectl:v1.6.0' : config.kubectl
+  def maven = (config.mavenImage == null) ? 'maven:3.5.0-jdk-8' : config.mavenImage
+  def docker = (config.dockerImage == null) ? 'docker' : config.dockerImage
+  def kubectl = (config.kubectlImage == null) ? 'lachlanevenson/k8s-kubectl:v1.6.0' : config.kubectlImage
   def mvnCommands = (config.mvnCommands == null) ? 'clean package' : config.mvnCommands
   def registry = System.getenv("REGISTRY").trim()
   def registrySecret = System.getenv("REGISTRY_SECRET").trim()
   def build = (config.build ?: System.getenv ("BUILD")).trim().toLowerCase() == 'true'
   def deploy = (config.deploy ?: System.getenv ("DEPLOY")).trim().toLowerCase() == 'true'
-  def defaultDeployBranch = System.getenv("DEFAULT_DEPLOY_BRANCH")
-  defaultDeployBranch = (defaultDeployBranch == null || defaultDeployBranch.trim() == "") ? 'master' : defaultDeployBranch
-  def deployBranch = (config.deployBranch == null) ? defaultDeployBranch : config.deployBranch
+  def deployBranch = config.deployBranch ?: (System.getenv("DEFAULT_DEPLOY_BRANCH").trim() ?: 'master')
 
   print "microserviceBuilderPipeline: registry=${registry} registrySecret=${registrySecret} build=${build} deploy=${deploy} deployBranch=${deployBranch}"
 
