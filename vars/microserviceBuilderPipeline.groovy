@@ -20,7 +20,7 @@
 
     build = 'true' - any value other than 'true' == false
     deploy = 'true' - any value other than 'true' == false
-    defaultDeployBranch = 'master' - only builds from this branch are deployed
+    deployBranch = 'master' - only builds from this branch are deployed
 
 -------------------------*/
 
