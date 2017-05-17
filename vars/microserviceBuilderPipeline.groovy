@@ -20,7 +20,7 @@
 
     build = 'true' - any value other than 'true' == false
     deploy = 'true' - any value other than 'true' == false
-    deployBranch = 'master' - only builds from this branch are deployed
+    defaultDeployBranch = 'master' - only builds from this branch are deployed
 
 -------------------------*/
 
@@ -43,7 +43,7 @@ def call(body) {
   def registrySecret = System.getenv("REGISTRY_SECRET").trim()
   def build = (config.build ?: System.getenv ("BUILD")).trim().toLowerCase() == 'true'
   def deploy = (config.deploy ?: System.getenv ("DEPLOY")).trim().toLowerCase() == 'true'
-  def defaultDeployBranch = System.getenv("DEPLOYBRANCH")
+  def defaultDeployBranch = System.getenv("DEFAULT_DEPLOY_BRANCH")
   defaultDeployBranch = (defaultDeployBranch == null || defaultDeployBranch.trim() == "") ? 'master' : defaultDeployBranch
   def deployBranch = (config.deployBranch == null) ? defaultDeployBranch : config.deployBranch
 
