@@ -22,7 +22,7 @@
     deploy = 'true' - any value other than 'true' == false
     deployBranch = 'master' - only builds from this branch are deployed
     namespace = 'targetNamespace' - deploys into Kubernetes targetNamespace.
-      Default is to deploy into Jenkins' namespace. 
+      Default is to deploy into Jenkins' namespace.
 
 -------------------------*/
 
@@ -104,11 +104,11 @@ def call(body) {
           container ('kubectl') {
             sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
 
-            def deployString = "kubectl apply -f manifests"
+            def deployCommand = "kubectl apply -f manifests"
             if (namespace) {
               deployString += " --namespace ${namespace} "
             }
-            sh deployString
+            sh deployCommand
           }
         }
       }
