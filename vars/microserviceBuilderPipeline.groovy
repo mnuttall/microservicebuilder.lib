@@ -134,7 +134,7 @@ def call(body) {
             sh "kubectl label namespace " + uuid + " test=true"
             */
             try {
-              sh "mvn -B integration-test"
+              sh "mvn -B verify failsafe:verify"
             } catch (err) {
               step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
               throw err
