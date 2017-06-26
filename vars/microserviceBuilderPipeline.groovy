@@ -135,8 +135,8 @@ def call(body) {
             */
             try {
               sh "mvn -B verify failsafe:verify"
-              sh "sleep 36000"
             } finally {
+              sh "sleep 36000"
               step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
               step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
             }
