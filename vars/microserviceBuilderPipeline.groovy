@@ -59,10 +59,18 @@ def call(body) {
   }
   print "microserviceBuilderPipeline: volumes = ${volumes}"
 
+  /* Add namespace support in later. It may be possible to use two registry namespaces;
+    one for images under test, and one for images that have passed tests.
+  namespaceUuid = randomUUID() as String
+  print "testing against namespace " + namespaceUuid
+  */
   podTemplate(
     label: 'msbPod',
     containers: [
       containerTemplate(name: 'maven', image: maven, ttyEnabled: true, command: 'cat'),
+/*        envVars: [
+          containerEnvVar(key: 'KUBERNETES_NAMESPACE', value: namespaceUuid)
+        ]), */
       containerTemplate(name: 'docker', image: docker, command: 'cat', ttyEnabled: true,
         envVars: [
           containerEnvVar(key: 'DOCKER_API_VERSION', value: '1.23.0')
@@ -92,14 +100,12 @@ def call(body) {
           stage ('Docker Build') {
             container ('docker') {
               sh "docker build -t ${image}:${gitCommit} ."
-              if (registry) {
-                if (!registry.endsWith('/')) {
-                  registry = "${registry}/"
-                }
-                sh "ln -s /root/.dockercfg /home/jenkins/.dockercfg"
-                sh "docker tag ${image}:${gitCommit} ${registry}${image}:${gitCommit}"
-                sh "docker push ${registry}${image}:${gitCommit}"
+              if (!registry.endsWith('/')) {
+                registry = "${registry}/"
               }
+              sh "ln -s /root/.dockercfg /home/jenkins/.dockercfg"
+              sh "docker tag ${image}:${gitCommit} ${registry}${image}:${gitCommit}"
+              sh "docker push ${registry}${image}:${gitCommit}"
             }
           }
         }
@@ -115,6 +121,19 @@ def call(body) {
               deployCommand += " --namespace ${namespace} "
             }
             sh deployCommand
+          }
+        }
+
+        // Step 1: Test the image post-deployment.
+        //  This isn't very good
+        //  No namespace support - I could add ${namespace} in as KUBERNETES_NAMESPACE for test-in-place but that's still not good enough.
+        stage ('Test deployment') {
+          container ('maven') {
+            /*
+            sh "kubectl create namespace " + uuid
+            sh "kubectl label namespace " + uuid + " test=true"
+            */
+            sh "mvn -B integration-test"
           }
         }
       }
