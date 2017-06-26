@@ -136,7 +136,7 @@ def call(body) {
             try {
               sh "mvn -B verify failsafe:verify"
             } catch (err) {
-              step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
+              step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*'])
               throw err
             }
           }
