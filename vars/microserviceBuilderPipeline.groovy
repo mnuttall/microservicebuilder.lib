@@ -133,7 +133,12 @@ def call(body) {
             sh "kubectl create namespace " + uuid
             sh "kubectl label namespace " + uuid + " test=true"
             */
-            sh "mvn -B integration-test"
+            try {
+              sh "mvn -B integration-test"
+            } catch (err) {
+              step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
+              throw err
+            }
           }
         }
       }
