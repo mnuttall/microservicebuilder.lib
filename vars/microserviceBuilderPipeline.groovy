@@ -59,7 +59,8 @@ def call(body) {
   }
   print "microserviceBuilderPipeline: volumes = ${volumes}"
 
-  testNamespace = "testns-${env.BUILD_ID}-" + randomUUID() as String
+  uuid = randomUUID() as String
+  testNamespace = "testns-${env.BUILD_ID}-${uuid}"
   print "testing against namespace " + testNamespace
 
     podTemplate(
