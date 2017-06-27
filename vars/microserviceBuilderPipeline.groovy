@@ -47,6 +47,8 @@ def call(body) {
   def registrySecret = System.getenv("REGISTRY_SECRET").trim()
   def build = (config.build ?: System.getenv ("BUILD")).trim().toLowerCase() == 'true'
   def deploy = (config.deploy ?: System.getenv ("DEPLOY")).trim().toLowerCase() == 'true'
+  def test = (config.test ?: System.getenv ("TEST")).trim().toLowerCase() == 'true'
+  def debug = (config.debug ?: System.getenv ("DEBUG")).trim().toLowerCase() == 'true'
   def namespace = config.namespace ?: (System.getenv("NAMESPACE") ?: "").trim()
 
   // Extra elvis here to cope with env var being absent until pipeline chart catches up
@@ -111,32 +113,38 @@ def call(body) {
         }
       }
 
+      /* replace '${image}:latest' with '${registry}{image}:${gitcommit}' in manifests/*
+         We'll need this so that we can use manifests/ for test or deployment. 
+         It's only a local change and not committed back to git. */
+      sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
+
       // Guard this once it's working
-      stage ('Test image') { 
-        container ('kubectl') { 
-          sh "kubectl create namespace ${testNamespace}"
-          sh "kubectl label namespace ${testNamespace} test=true"
-          sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
-          sh "kubectl apply -f manifests --namespace ${testNamespace}"
-        }
-        container ('maven') {
-          try {
-            sh "mvn -B verify failsafe:verify"
-          } finally {
-            step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
-            step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
+      if (test && fileExists('pom.xml')) { 
+        stage ('Test image') { 
+          container ('kubectl') { 
+            sh "kubectl create namespace ${testNamespace}"
+            sh "kubectl label namespace ${testNamespace} test=true"
+            sh "kubectl apply -f manifests --namespace ${testNamespace}"
           }
-        }
-        container ('kubectl') { 
-          sh 'kubectl delete namespace ${testNamespace}'
+          container ('maven') {
+            try {
+              sh "mvn -B verify failsafe:verify"
+            } finally {
+              step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
+              step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
+              if (!debug) { 
+                container ('kubectl') { 
+                  sh "kubectl delete namespace ${testNamespace}"
+                }
+              }
+            }
+          }        
         }
       }
 
       if (deploy && env.BRANCH_NAME == deployBranch && fileExists('manifests')) {
         stage ('Deploy') {
           container ('kubectl') {
-            // sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
-
             def deployCommand = "kubectl apply -f manifests"
             if (namespace) {
               deployCommand += " --namespace ${namespace} "
