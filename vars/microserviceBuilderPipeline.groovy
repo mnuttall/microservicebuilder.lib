@@ -47,14 +47,15 @@ def call(body) {
   def registrySecret = System.getenv("REGISTRY_SECRET").trim()
   def build = (config.build ?: System.getenv ("BUILD")).trim().toLowerCase() == 'true'
   def deploy = (config.deploy ?: System.getenv ("DEPLOY")).trim().toLowerCase() == 'true'
-  def test = (config.test ?: System.getenv ("TEST")).trim().toLowerCase() == 'true'
-  def debug = (config.debug ?: System.getenv ("DEBUG")).trim().toLowerCase() == 'true'
+  def test = (config.test ?: (System.getenv ("TEST") ?: "false").trim()).toLowerCase() == 'true'
+  def debug = (config.debug ?: (System.getenv ("DEBUG") ?: "false").trim()).toLowerCase() == 'true'
   def namespace = config.namespace ?: (System.getenv("NAMESPACE") ?: "").trim()
 
   // Extra elvis here to cope with env var being absent until pipeline chart catches up
   def deployBranch = config.deployBranch ?: ((System.getenv("DEFAULT_DEPLOY_BRANCH") ?: "").trim() ?: 'master')
 
-  print "microserviceBuilderPipeline: registry=${registry} registrySecret=${registrySecret} build=${build} deploy=${deploy} deployBranch=${deployBranch} namespace=${namespace}"
+  print "microserviceBuilderPipeline: registry=${registry} registrySecret=${registrySecret} build=${build} \
+    deploy=${deploy} deployBranch=${deployBranch} namespace=${namespace}"
 
   /* Only mount registry secret if it's present */
   def volumes = [ hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock') ]
