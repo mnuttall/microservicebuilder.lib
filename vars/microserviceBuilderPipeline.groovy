@@ -55,9 +55,9 @@ def call(body) {
   def deployBranch = config.deployBranch ?: ((System.getenv("DEFAULT_DEPLOY_BRANCH") ?: "").trim() ?: 'master')
 
   print "microserviceBuilderPipeline: registry=${registry} registrySecret=${registrySecret} build=${build} \
-    deploy=${deploy} deployBranch=${deployBranch} namespace=${namespace}"
+  deploy=${deploy} deployBranch=${deployBranch} test=${test} debug=${debug} namespace=${namespace}"
 
-  /* Only mount registry secret if it's present */
+  // Only mount registry secret if it's present 
   def volumes = [ hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock') ]
   if (registrySecret) {
     volumes += secretVolume(secretName: registrySecret, mountPath: '/root')
