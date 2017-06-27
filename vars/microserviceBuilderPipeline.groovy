@@ -59,18 +59,16 @@ def call(body) {
   }
   print "microserviceBuilderPipeline: volumes = ${volumes}"
 
-  /* Add namespace support in later. It may be possible to use two registry namespaces;
-    one for images under test, and one for images that have passed tests.
-  namespaceUuid = randomUUID() as String
-  print "testing against namespace " + namespaceUuid
-  */
-  podTemplate(
+  testNamespace = "testns-${env.BUILD_ID}-" + randomUUID() as String
+  print "testing against namespace " + testNamespace
+
+    podTemplate(
     label: 'msbPod',
     containers: [
-      containerTemplate(name: 'maven', image: maven, ttyEnabled: true, command: 'cat'),
-/*        envVars: [
-          containerEnvVar(key: 'KUBERNETES_NAMESPACE', value: namespaceUuid)
-        ]), */
+      containerTemplate(name: 'maven', image: maven, ttyEnabled: true, command: 'cat',
+        envVars: [
+          containerEnvVar(key: 'KUBERNETES_NAMESPACE', value: testNamespace)
+        ]), 
       containerTemplate(name: 'docker', image: docker, command: 'cat', ttyEnabled: true,
         envVars: [
           containerEnvVar(key: 'DOCKER_API_VERSION', value: '1.23.0')
@@ -111,34 +109,37 @@ def call(body) {
         }
       }
 
+      // Guard this once it's working
+      stage ('Test image') { 
+        container ('kubectl') { 
+          sh "kubectl create namespace ${testNamespace}"
+          sh "kubectl label namespace ${testNamespace} test=true"
+          sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
+          sh "kubectl apply -f manifests --namespace ${testNamespace}"
+        }
+        container ('maven') {
+          try {
+            sh "mvn -B verify failsafe:verify"
+          } finally {
+            step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
+            step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
+          }
+        }
+        container ('kubectl') { 
+          sh 'kubectl delete namespace ${testNamespace}'
+        }
+      }
+
       if (deploy && env.BRANCH_NAME == deployBranch && fileExists('manifests')) {
         stage ('Deploy') {
           container ('kubectl') {
-            sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
+            // sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
 
             def deployCommand = "kubectl apply -f manifests"
             if (namespace) {
               deployCommand += " --namespace ${namespace} "
             }
             sh deployCommand
-          }
-        }
-
-        // Step 1: Test the image post-deployment.
-        //  This isn't very good
-        //  No namespace support - I could add ${namespace} in as KUBERNETES_NAMESPACE for test-in-place but that's still not good enough.
-        stage ('Test deployment') {
-          container ('maven') {
-            /*
-            sh "kubectl create namespace " + uuid
-            sh "kubectl label namespace " + uuid + " test=true"
-            */
-            try {
-              sh "mvn -B verify failsafe:verify"
-            } finally {
-              step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
-              step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
-            }
           }
         }
       }
