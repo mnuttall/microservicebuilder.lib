@@ -26,6 +26,8 @@
 
 -------------------------*/
 
+import java.util.UUID
+
 def call(body) {
   def config = [:]
   // Parameter expansion works after the call to body() below.
@@ -59,8 +61,7 @@ def call(body) {
   }
   print "microserviceBuilderPipeline: volumes = ${volumes}"
 
-  uuid = randomUUID() as String
-  testNamespace = "testns-${env.BUILD_ID}-${uuid}"
+  testNamespace = "testns-${env.BUILD_ID}-" + UUID.randomUUID()
   print "testing against namespace " + testNamespace
 
     podTemplate(
