@@ -119,7 +119,6 @@ def call(body) {
          It's only a local change and not committed back to git. */
       sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
 
-      // Guard this once it's working
       if (test && fileExists('pom.xml')) { 
         stage ('Test image') { 
           container ('kubectl') { 
