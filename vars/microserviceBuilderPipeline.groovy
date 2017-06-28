@@ -39,6 +39,7 @@ def call(body) {
   body()
 
   print "microserviceBuilderPipeline : config = ${config}"
+  print "Debug code added in p2"
 
   def image = config.image
   def maven = (config.mavenImage == null) ? 'maven:3.5.0-jdk-8' : config.mavenImage
