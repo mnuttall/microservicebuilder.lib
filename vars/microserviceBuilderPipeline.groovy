@@ -20,6 +20,8 @@
 
     build = 'true' - any value other than 'true' == false
     deploy = 'true' - any value other than 'true' == false
+    test = 'true' - `mvn test` is run if this value is `true` and a pom.xml exists
+    debug = 'false' - namespaces created during tests are deleted unless this value is set to 'true'
     deployBranch = 'master' - only builds from this branch are deployed
     namespace = 'targetNamespace' - deploys into Kubernetes targetNamespace.
       Default is to deploy into Jenkins' namespace.
@@ -57,7 +59,7 @@ def call(body) {
   print "microserviceBuilderPipeline: registry=${registry} registrySecret=${registrySecret} build=${build} \
   deploy=${deploy} deployBranch=${deployBranch} test=${test} debug=${debug} namespace=${namespace}"
 
-  // Only mount registry secret if it's present 
+  // Only mount registry secret if it's present
   def volumes = [ hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock') ]
   if (registrySecret) {
     volumes += secretVolume(secretName: registrySecret, mountPath: '/root')
@@ -73,7 +75,7 @@ def call(body) {
       containerTemplate(name: 'maven', image: maven, ttyEnabled: true, command: 'cat',
         envVars: [
           containerEnvVar(key: 'KUBERNETES_NAMESPACE', value: testNamespace)
-        ]), 
+        ]),
       containerTemplate(name: 'docker', image: docker, command: 'cat', ttyEnabled: true,
         envVars: [
           containerEnvVar(key: 'DOCKER_API_VERSION', value: '1.23.0')
@@ -115,13 +117,13 @@ def call(body) {
       }
 
       /* replace '${image}:latest' with '${registry}{image}:${gitcommit}' in manifests/*
-         We'll need this so that we can use manifests/ for test or deployment. 
+         We'll need this so that we can use manifests/ for test or deployment.
          It's only a local change and not committed back to git. */
       sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
 
-      if (test && fileExists('pom.xml')) { 
-        stage ('Verify') { 
-          container ('kubectl') { 
+      if (test && fileExists('pom.xml')) {
+        stage ('Verify') {
+          container ('kubectl') {
             sh "kubectl create namespace ${testNamespace}"
             sh "kubectl label namespace ${testNamespace} test=true"
             sh "kubectl apply -f manifests --namespace ${testNamespace}"
@@ -132,13 +134,13 @@ def call(body) {
             } finally {
               step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
               step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
-              if (!debug) { 
-                container ('kubectl') { 
+              if (!debug) {
+                container ('kubectl') {
                   sh "kubectl delete namespace ${testNamespace}"
                 }
               }
             }
-          }        
+          }
         }
       }
 
