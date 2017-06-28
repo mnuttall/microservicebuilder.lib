@@ -36,7 +36,7 @@ def call(body) {
   body.delegate = config
   body()
 
-  print "microserviceBuilderPipeline **master branch**: config = ${config}"
+  print "microserviceBuilderPipeline : config = ${config}"
 
   def image = config.image
   def maven = (config.mavenImage == null) ? 'maven:3.5.0-jdk-8' : config.mavenImage
@@ -120,7 +120,7 @@ def call(body) {
       sh "find manifests -type f | xargs sed -i \'s|${image}:latest|${registry}${image}:${gitCommit}|g\'"
 
       if (test && fileExists('pom.xml')) { 
-        stage ('Test image') { 
+        stage ('Verify') { 
           container ('kubectl') { 
             sh "kubectl create namespace ${testNamespace}"
             sh "kubectl label namespace ${testNamespace} test=true"
@@ -128,7 +128,7 @@ def call(body) {
           }
           container ('maven') {
             try {
-              sh "mvn -B verify failsafe:verify"
+              sh "mvn -B verify"
             } finally {
               step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
               step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
