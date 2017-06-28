@@ -36,7 +36,7 @@ def call(body) {
   body.delegate = config
   body()
 
-  print "microserviceBuilderPipeline: config = ${config}"
+  print "microserviceBuilderPipeline **master branch**: config = ${config}"
 
   def image = config.image
   def maven = (config.mavenImage == null) ? 'maven:3.5.0-jdk-8' : config.mavenImage
