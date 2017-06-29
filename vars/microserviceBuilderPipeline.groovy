@@ -133,7 +133,7 @@ def call(body) {
               sh "mvn -B verify"
             } finally {
               step([$class: 'JUnitResultArchiver', allowEmptyResults: true, testResults: '**/target/failsafe-reports/*.xml'])
-              // step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
+              step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
               if (!debug) {
                 container ('kubectl') {
                   sh "kubectl delete namespace ${testNamespace}"
