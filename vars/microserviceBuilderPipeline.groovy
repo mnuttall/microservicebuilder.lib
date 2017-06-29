@@ -39,7 +39,6 @@ def call(body) {
   body()
 
   print "microserviceBuilderPipeline : config = ${config}"
-  print "This debug added in 1.0.1 branch"
 
   def image = config.image
   def maven = (config.mavenImage == null) ? 'maven:3.5.0-jdk-8' : config.mavenImage
@@ -133,8 +132,8 @@ def call(body) {
             try {
               sh "mvn -B verify"
             } finally {
-              step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
-              step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
+              step([$class: 'JUnitResultArchiver', allowEmptyResults: true, testResults: '**/target/failsafe-reports/*.xml'])
+              // step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
               if (!debug) {
                 container ('kubectl') {
                   sh "kubectl delete namespace ${testNamespace}"
