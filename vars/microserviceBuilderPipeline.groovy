@@ -132,7 +132,7 @@ def call(body) {
             try {
               sh "mvn -B verify"
             } finally {
-              step([$class: 'JUnitResultArchiver', testResults: '**/target/failsafe-reports/*.xml'])
+              step([$class: 'JUnitResultArchiver', allowEmptyResults: true, testResults: '**/target/failsafe-reports/*.xml'])
               step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
               if (!debug) {
                 container ('kubectl') {
