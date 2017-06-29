@@ -39,7 +39,6 @@ def call(body) {
   body()
 
   print "microserviceBuilderPipeline : config = ${config}"
-  print "Debug code added in p2"
 
   def image = config.image
   def maven = (config.mavenImage == null) ? 'maven:3.5.0-jdk-8' : config.mavenImage
@@ -50,11 +49,11 @@ def call(body) {
   def registrySecret = System.getenv("REGISTRY_SECRET").trim()
   def build = (config.build ?: System.getenv ("BUILD")).trim().toLowerCase() == 'true'
   def deploy = (config.deploy ?: System.getenv ("DEPLOY")).trim().toLowerCase() == 'true'
-  def test = (config.test ?: (System.getenv ("TEST") ?: "false").trim()).toLowerCase() == 'true'
-  def debug = (config.debug ?: (System.getenv ("DEBUG") ?: "false").trim()).toLowerCase() == 'true'
   def namespace = config.namespace ?: (System.getenv("NAMESPACE") ?: "").trim()
 
-  // Extra elvis here to cope with env var being absent until pipeline chart catches up
+  // 'deploy', 'test' and 'debug' options were all added later. Helm chart may not have the associated properties set. 
+  def test = (config.test ?: (System.getenv ("TEST") ?: "false").trim()).toLowerCase() == 'true'
+  def debug = (config.debug ?: (System.getenv ("DEBUG") ?: "false").trim()).toLowerCase() == 'true'
   def deployBranch = config.deployBranch ?: ((System.getenv("DEFAULT_DEPLOY_BRANCH") ?: "").trim() ?: 'master')
 
   print "microserviceBuilderPipeline: registry=${registry} registrySecret=${registrySecret} build=${build} \
