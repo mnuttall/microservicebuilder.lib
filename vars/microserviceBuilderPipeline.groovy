@@ -20,7 +20,7 @@
 
     build = 'true' - any value other than 'true' == false
     deploy = 'true' - any value other than 'true' == false
-    test = 'true' - `mvn test` is run if this value is `true` and a pom.xml exists
+    test = 'true' - `mvn verify` is run if this value is `true` and a pom.xml exists
     debug = 'false' - namespaces created during tests are deleted unless this value is set to 'true'
     deployBranch = 'master' - only builds from this branch are deployed
     namespace = 'targetNamespace' - deploys into Kubernetes targetNamespace.
