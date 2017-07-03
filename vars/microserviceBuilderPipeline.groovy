@@ -28,7 +28,11 @@
 
 -------------------------*/
 
+import com.cloudbees.groovy.cps.NonCPS
+import java.io.File
 import java.util.UUID
+import groovy.json.JsonOutput;
+import groovy.json.JsonSlurper;
 
 def call(body) {
   def config = [:]
@@ -58,6 +62,9 @@ def call(body) {
 
   print "microserviceBuilderPipeline: registry=${registry} registrySecret=${registrySecret} build=${build} \
   deploy=${deploy} deployBranch=${deployBranch} test=${test} debug=${debug} namespace=${namespace}"
+
+  // We won't be able to get hold of registrySecret if Jenkins is running in a non-default namespace that is not the deployment namespace. 
+  // In that case we'll need the registrySecret to have been ported over, perhaps during pipeline install. 
 
   // Only mount registry secret if it's present
   def volumes = [ hostPathVolume(hostPath: '/var/run/docker.sock', mountPath: '/var/run/docker.sock') ]
@@ -126,7 +133,12 @@ def call(body) {
           container ('kubectl') {
             sh "kubectl create namespace ${testNamespace}"
             sh "kubectl label namespace ${testNamespace} test=true"
+
+            giveRegistryAccessToNamespace (testNamespace, registrySecret)
+
             sh "kubectl apply -f manifests --namespace ${testNamespace}"
+
+            
           }
           container ('maven') {
             try {
@@ -157,4 +169,44 @@ def call(body) {
       }
     }
   }
+}
+
+/* 
+  We had a (temporary) namespace that we want to grant CfC registry access to. 
+  String namespace: target namespace
+  String registrySecret: secret in Jenkins' namespace to use
+
+  1. Port registrySecret into namespace
+  2. Modify 'default' serviceaccount to use ported registrySecret. 
+*/
+
+def giveRegistryAccessToNamespace (String namespace, String registrySecret) { 
+  String secretScript = "kubectl get secret/${registrySecret} --template=\"{{index .data}}\" | sed -e \"s/map\\[\\.dockercfg:\\(.*\\)\\]/\\1/\""
+  String secret = sh (script: secretScript, returnStdout: true).trim()
+  String yaml = """
+  apiVersion: v1
+  data:
+    .dockercfg: ${secret}
+  kind: Secret
+  metadata:
+    name: ${registrySecret}
+  type: kubernetes.io/dockercfg
+  """
+  sh "printf -- \"${yaml}\" | kubectl apply --namespace ${namespace} -f -"
+
+  String sa = sh (script: "kubectl get sa default -o json --namespace ${namespace}", returnStdout: true).trim()
+  def map = new JsonSlurper().parseText (sa) 
+  map.metadata.remove ('resourceVersion')
+  map.put ('imagePullSecrets', [['name': registrySecret]])
+  def json = JsonOutput.prettyPrint(JsonOutput.toJson(map))
+  writeFile file: 'temp.json', text: json
+  sh "kubectl replace sa default --namespace ${namespace} -f temp.json"
+  
+  /*
+  Options here: null out local JSON objects, or add @NonCPS annotation: 
+  See https://stackoverflow.com/questions/40196903/why-noncps-is-necessary-when-iterating-through-the-list
+  */ 
+  
+  map = null
+  json = null
 }
