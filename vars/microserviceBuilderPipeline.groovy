@@ -181,7 +181,7 @@ def call(body) {
 */
 
 def giveRegistryAccessToNamespace (String namespace, String registrySecret) { 
-  String secretScript = "kubectl get secret/${registrySecret} --template=\"{{index .data}}\" | sed -e \"s/map\\[\\.dockercfg:\\(.*\\)\\]/\\1/\""
+  String secretScript = "kubectl get secret/${registrySecret} -o jsonpath=\"{.data.\\.dockercfg}\""
   String secret = sh (script: secretScript, returnStdout: true).trim()
   String yaml = """
   apiVersion: v1
