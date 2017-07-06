@@ -98,7 +98,6 @@ def call(body) {
         checkout scm
         gitCommit = sh(script: 'git rev-parse --short HEAD', returnStdout: true).trim()
         echo "checked out git commit ${gitCommit}"
-        echo "1: result = ${currentBuild.result}"
       }
 
       if (build) {
@@ -122,7 +121,6 @@ def call(body) {
             }
           }
         }
-        echo "2: result = ${currentBuild.result}"
       }
 
       /* replace '${image}:latest' with '${registry}{image}:${gitcommit}' in manifests/*
@@ -145,18 +143,14 @@ def call(body) {
           container ('maven') {
             try {
               sh "mvn -B verify"
-              echo "3: result = ${currentBuild.result}"
             } finally {
               step([$class: 'JUnitResultArchiver', allowEmptyResults: true, testResults: '**/target/failsafe-reports/*.xml'])
-              echo "3.1: result = ${currentBuild.result}"
               step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt', allowEmptyArchive: true])
-              echo "3.2: result = ${currentBuild.result}"
               if (!debug) {
                 container ('kubectl') {
                   sh "kubectl delete namespace ${testNamespace}"
                 }
               }
-              echo "4: result = ${currentBuild.result}"
             }
           }
         }
@@ -173,9 +167,6 @@ def call(body) {
           }
         }
       }
-
-      echo "5: result = ${currentBuild.result}"
-
     }
   }
 }
