@@ -205,8 +205,9 @@ def giveRegistryAccessToNamespace (String namespace, String registrySecret) {
   /*
   Options here: null out local JSON objects, or add @NonCPS annotation: 
   See https://stackoverflow.com/questions/40196903/why-noncps-is-necessary-when-iterating-through-the-list
-  */ 
+ 
   
   map = null
   json = null
+    */
 }
