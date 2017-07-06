@@ -148,7 +148,9 @@ def call(body) {
               echo "3: result = ${currentBuild.result}"
             } finally {
               step([$class: 'JUnitResultArchiver', allowEmptyResults: true, testResults: '**/target/failsafe-reports/*.xml'])
-              step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt'])
+              echo "3.1: result = ${currentBuild.result}"
+              step([$class: 'ArtifactArchiver', artifacts: '**/target/failsafe-reports/*.txt', allowEmptyArchive: true])
+              echo "3.2: result = ${currentBuild.result}"
               if (!debug) {
                 container ('kubectl') {
                   sh "kubectl delete namespace ${testNamespace}"
