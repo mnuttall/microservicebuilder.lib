@@ -172,7 +172,7 @@ def call(body) {
 }
 
 /* 
-  We had a (temporary) namespace that we want to grant CfC registry access to. 
+  We have a (temporary) namespace that we want to grant CfC registry access to. 
   String namespace: target namespace
   String registrySecret: secret in Jenkins' namespace to use
 
@@ -195,19 +195,14 @@ def giveRegistryAccessToNamespace (String namespace, String registrySecret) {
   sh "printf -- \"${yaml}\" | kubectl apply --namespace ${namespace} -f -"
 
   String sa = sh (script: "kubectl get sa default -o json --namespace ${namespace}", returnStdout: true).trim()
+  /*
+      JsonSlurper is not thread safe, not serializable, and not good to use in Jenkins jobs. See 
+      https://stackoverflow.com/questions/37864542/jenkins-pipeline-notserializableexception-groovy-json-internal-lazymap
+  */
   def map = new JsonSlurperClassic().parseText (sa) 
   map.metadata.remove ('resourceVersion')
   map.put ('imagePullSecrets', [['name': registrySecret]])
   def json = JsonOutput.prettyPrint(JsonOutput.toJson(map))
   writeFile file: 'temp.json', text: json
   sh "kubectl replace sa default --namespace ${namespace} -f temp.json"
-  
-  /*
-  Options here: null out local JSON objects, or add @NonCPS annotation: 
-  See https://stackoverflow.com/questions/40196903/why-noncps-is-necessary-when-iterating-through-the-list
- 
-  
-  map = null
-  json = null
-    */
 }
