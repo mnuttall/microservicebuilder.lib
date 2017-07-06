@@ -32,7 +32,7 @@ import com.cloudbees.groovy.cps.NonCPS
 import java.io.File
 import java.util.UUID
 import groovy.json.JsonOutput;
-import groovy.json.JsonSlurper;
+import groovy.json.JsonSlurperClassic;
 
 def call(body) {
   def config = [:]
@@ -195,7 +195,7 @@ def giveRegistryAccessToNamespace (String namespace, String registrySecret) {
   sh "printf -- \"${yaml}\" | kubectl apply --namespace ${namespace} -f -"
 
   String sa = sh (script: "kubectl get sa default -o json --namespace ${namespace}", returnStdout: true).trim()
-  def map = new JsonSlurper().parseText (sa) 
+  def map = new JsonSlurperClassic().parseText (sa) 
   map.metadata.remove ('resourceVersion')
   map.put ('imagePullSecrets', [['name': registrySecret]])
   def json = JsonOutput.prettyPrint(JsonOutput.toJson(map))
