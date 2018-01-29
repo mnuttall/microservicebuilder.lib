@@ -231,6 +231,10 @@ def call(body) {
         }
       }
 
+      echo "deploy = ${deploy}"
+      echo "env.BRANCH_NAME = ${env.BRANCH_NAME}"
+      echo "deployBranch = ${deployBranch}"
+      
       if (deploy && env.BRANCH_NAME == deployBranch) {
         stage ('Deploy') {
           deployProject (realChartFolder, registry, image, imageTag, namespace, manifestFolder)
